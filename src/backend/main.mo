@@ -13,11 +13,11 @@ import Storage "mo:caffeineai-object-storage/Storage";
 import MixinObjectStorage "mo:caffeineai-object-storage/Mixin";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import AccessControl "mo:caffeineai-authorization/access-control";
-import Migration "migration";
 
 
 
-(with migration = Migration.run)
+
+
 actor {
   // Initialize the access control system
   let accessControlState = AccessControl.initState();

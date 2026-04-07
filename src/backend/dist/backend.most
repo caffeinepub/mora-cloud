@@ -1,4 +1,4 @@
-// Version: 3.0.0
+// Version: 1.0.0
 type Beneficiary__528603104 =
   {
     createdAt : Time__900049286;
@@ -68,66 +68,11 @@ type Note__74666102 =
     title : Text;
     updatedAt : Time__900049286
   };
-type OldBeneficiary__260178391 =
-  {
-    createdAt : Time__900049286;
-    displayName : Text;
-    hashedPassword : Text;
-    id : Text;
-    username : Text
-  };
-type OldCapsule__6815870 =
-  {
-    beneficiaries : Map__605269027<Text, OldBeneficiary__260178391>;
-    globalInstructions : Text;
-    locked : Bool;
-    media : Map__605269027<Text, OldMedia__936063719>;
-    neuronEntries : Map__605269027<Text, OldNeuronEntry__828063403>;
-    notes : Map__605269027<Text, OldNote__821963071>;
-    owner : Principal
-  };
-type OldMediaType__16242099 = {#photo; #video};
-type OldMedia__936063719 =
-  {
-    blobId : Text;
-    createdAt : Time__900049286;
-    id : Text;
-    mediaType : OldMediaType__16242099;
-    title : Text
-  };
-type OldNeuronEntry__828063403 =
-  {
-    designatedController : Text;
-    dissolveDate : Text;
-    neuronId : Text;
-    notes : Text;
-    votingPreferences : Text
-  };
-type OldNote__821963071 =
-  {
-    body : Text;
-    createdAt : Time__900049286;
-    id : Text;
-    title : Text;
-    updatedAt : Time__900049286
-  };
 type Time__796480547 = Int__270357528;
 type Time__900049286 = Time__796480547;
-type UserProfile__315128327 = {email : ?Text; name : Text};
 type UserProfile__491224006 = {email : ?Text; name : Text};
 type UserRole__1054455867 = {#admin; #guest; #user};
-actor ({
-  stable accessControlState :
-    {
-      var adminAssigned : Bool;
-      userRoles : Map__605269027<Principal, UserRole__1054455867>
-    };
-  in beneficiarySessions :
-    Map__605269027<Text, (Principal, Text, Time__900049286)>;
-  in capsules : Map__605269027<Principal, OldCapsule__6815870>;
-  in userProfiles : Map__605269027<Principal, UserProfile__315128327>;
-  in var visitCount : Nat
-}, {
+actor {
   stable accessControlState :
     {
       var adminAssigned : Bool;
@@ -149,4 +94,4 @@ actor ({
       var size : Nat__490723111
     };
   stable var visitCount : Nat
-}) ;
+};

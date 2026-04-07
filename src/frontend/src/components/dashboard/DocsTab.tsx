@@ -22,18 +22,28 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ExternalLink,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Check,
+  Download,
+  Eye,
   FileSpreadsheet,
   FileText,
   Files,
+  Link2,
   Loader2,
   Pencil,
   Presentation,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Document } from "../../backend.d";
 import { DocumentType } from "../../backend.d";
@@ -65,7 +75,7 @@ function getDocTypeFromFile(file: File): DocumentType {
   return EXT_TO_TYPE[ext] ?? DocumentType.pdf;
 }
 
-function getExtFromDocType(type: DocumentType): string {
+export function getExtFromDocType(type: DocumentType): string {
   switch (type) {
     case DocumentType.pdf:
       return ".pdf";
@@ -77,6 +87,16 @@ function getExtFromDocType(type: DocumentType): string {
       return ".pptx";
   }
 }
+
+const DOC_MIME: Record<DocumentType, string> = {
+  [DocumentType.pdf]: "application/pdf",
+  [DocumentType.word]:
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  [DocumentType.excel]:
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  [DocumentType.powerpoint]:
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+};
 
 interface DocTypeConfig {
   label: string;
@@ -115,6 +135,75 @@ const DOC_TYPE_CONFIG: Record<DocumentType, DocTypeConfig> = {
   },
 };
 
+// ── PDF Viewer Modal ──────────────────────────────────────────────────────
+
+function PdfViewerModal({
+  url,
+  title,
+  onClose,
+}: {
+  url: string;
+  title: string;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "oklch(0 0 0 / 0.75)" }}
+      tabIndex={-1}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onClose();
+      }}
+      aria-modal="true"
+      aria-label={`Viewing ${title}`}
+    >
+      <div
+        className="relative w-full max-w-4xl rounded-2xl overflow-hidden flex flex-col"
+        style={{
+          background: "oklch(0.14 0.03 265)",
+          border: "1px solid oklch(0.26 0.05 265 / 0.6)",
+          height: "min(90vh, 900px)",
+        }}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+          style={{ borderBottom: "1px solid oklch(0.26 0.05 265 / 0.5)" }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <FileText
+              className="w-4 h-4 flex-shrink-0"
+              style={{ color: "oklch(0.65 0.2 25)" }}
+            />
+            <span className="font-medium text-sm text-foreground truncate">
+              {title}
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 flex-shrink-0"
+            onClick={onClose}
+            aria-label="Close viewer"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+        {/* PDF iframe */}
+        <iframe
+          src={url}
+          title={title}
+          className="flex-1 w-full"
+          style={{ border: "none", background: "#fff" }}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── DocRow ────────────────────────────────────────────────────────────────
 
 function DocRow({
@@ -133,17 +222,77 @@ function DocRow({
   const [renameValue, setRenameValue] = useState(doc.title);
   const [renaming, setRenaming] = useState(false);
 
+  // View state (PDF inline modal only)
+  const [viewUrl, setViewUrl] = useState<string | null>(null);
+  const [viewing, setViewing] = useState(false);
+
+  // Download state
+  const [downloading, setDownloading] = useState(false);
+
+  // Share/copy state
+  const [copied, setCopied] = useState(false);
+
   const config = DOC_TYPE_CONFIG[doc.documentType];
   const DocIcon = config.icon;
+  const isPdf = doc.documentType === DocumentType.pdf;
 
-  const handleOpen = async () => {
+  // VIEW: PDFs open in inline modal; Office docs open in Google Docs Viewer
+  const handleView = useCallback(async () => {
+    setViewing(true);
     try {
       const url = await getBlobUrl(doc.blobId);
-      window.open(url, "_blank", "noopener,noreferrer");
+      if (isPdf) {
+        setViewUrl(url);
+      } else {
+        // Google Docs Viewer for Word/Excel/PowerPoint
+        const viewerUrl = `https://docs.google.com/gviewer?url=${encodeURIComponent(url)}&embedded=true`;
+        window.open(viewerUrl, "_blank", "noopener,noreferrer");
+      }
     } catch {
       toast.error("Could not open document. Please try again.");
+    } finally {
+      setViewing(false);
     }
-  };
+  }, [getBlobUrl, doc.blobId, isPdf]);
+
+  // DOWNLOAD: fetch bytes → Blob with correct MIME → anchor click
+  const handleDownload = useCallback(async () => {
+    setDownloading(true);
+    try {
+      const cdnUrl = await getBlobUrl(doc.blobId);
+      const response = await fetch(cdnUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const arrayBuffer = await response.arrayBuffer();
+      const mime = DOC_MIME[doc.documentType];
+      const blob = new Blob([arrayBuffer], { type: mime });
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = `${doc.title}${getExtFromDocType(doc.documentType)}`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(objectUrl);
+      toast.success("Download started");
+    } catch {
+      toast.error("Download failed. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  }, [getBlobUrl, doc.blobId, doc.documentType, doc.title]);
+
+  // SHARE: copy CDN URL to clipboard
+  const handleShare = useCallback(async () => {
+    try {
+      const url = await getBlobUrl(doc.blobId);
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      toast.success("Link copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy link. Please try again.");
+    }
+  }, [getBlobUrl, doc.blobId]);
 
   const handleRenameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,7 +312,7 @@ function DocRow({
   return (
     <>
       <motion.div
-        className="flex items-center gap-4 px-4 py-3.5 rounded-xl transition-colors hover:bg-muted/20"
+        className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors hover:bg-muted/20"
         style={{ border: "1px solid oklch(0.26 0.05 265 / 0.5)" }}
         variants={{
           hidden: { opacity: 0, y: 8 },
@@ -198,70 +347,154 @@ function DocRow({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={handleOpen}
-            title="Open / Download"
-            aria-label={`Open ${doc.title}`}
-            data-ocid={`docs.open_button.${idx + 1}`}
-          >
-            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => {
-              setRenameValue(doc.title);
-              setRenameOpen(true);
-            }}
-            title="Rename"
-            aria-label={`Rename ${doc.title}`}
-            data-ocid={`docs.rename_button.${idx + 1}`}
-          >
-            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-          </Button>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                title="Delete"
-                aria-label={`Delete ${doc.title}`}
-                data-ocid={`docs.delete_button.${idx + 1}`}
-              >
-                <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete this document?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  "{doc.title}" will be permanently removed from your capsule.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel data-ocid="docs.cancel_button">
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={onDelete}
-                  data-ocid="docs.confirm_delete_button"
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        <TooltipProvider delayDuration={400}>
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            {/* VIEW */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleView}
+                  disabled={viewing}
+                  aria-label={`View ${doc.title}`}
+                  data-ocid={`docs.view_button.${idx + 1}`}
                 >
+                  {viewing ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                {isPdf ? "View" : "View in Google Docs"}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* DOWNLOAD */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  aria-label={`Download ${doc.title}`}
+                  data-ocid={`docs.download_button.${idx + 1}`}
+                >
+                  {downloading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5 text-muted-foreground" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                Download
+              </TooltipContent>
+            </Tooltip>
+
+            {/* SHARE */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleShare}
+                  aria-label={`Copy link for ${doc.title}`}
+                  data-ocid={`docs.share_button.${idx + 1}`}
+                >
+                  {copied ? (
+                    <Check className="w-3.5 h-3.5 text-green-500" />
+                  ) : (
+                    <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                {copied ? "Copied!" : "Copy link"}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* RENAME */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => {
+                    setRenameValue(doc.title);
+                    setRenameOpen(true);
+                  }}
+                  aria-label={`Rename ${doc.title}`}
+                  data-ocid={`docs.rename_button.${idx + 1}`}
+                >
+                  <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                Rename
+              </TooltipContent>
+            </Tooltip>
+
+            {/* DELETE */}
+            <AlertDialog>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      aria-label={`Delete ${doc.title}`}
+                      data-ocid={`docs.delete_button.${idx + 1}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
+                    </Button>
+                  </AlertDialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
                   Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+                </TooltipContent>
+              </Tooltip>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this document?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    "{doc.title}" will be permanently removed from your capsule.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel data-ocid="docs.cancel_button">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={onDelete}
+                    data-ocid="docs.confirm_delete_button"
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </TooltipProvider>
       </motion.div>
+
+      {/* PDF inline viewer */}
+      {viewUrl && (
+        <PdfViewerModal
+          url={viewUrl}
+          title={doc.title}
+          onClose={() => setViewUrl(null)}
+        />
+      )}
 
       {/* Rename dialog */}
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
@@ -602,6 +835,3 @@ export default function DocsTab() {
     </div>
   );
 }
-
-// Re-export for convenience
-export { getExtFromDocType };
