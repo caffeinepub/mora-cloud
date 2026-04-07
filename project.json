@@ -1,0 +1,21 @@
+{
+  "overview": "A personal digital capsule for Morteza Ajorloo, storing notes, documents, media, and beneficiary information securely on the Internet Computer.",
+  "features": [
+    "Notes tab for creating and managing personal notes",
+    "Docs tab for uploading and managing PDF, Word, Excel, and PowerPoint documents",
+    "Media tab for photos and videos",
+    "Beneficiary access management",
+    "Neuron tracking",
+    "Capsule lock and unlock"
+  ],
+  "category": "personal",
+  "tags": [
+    "capsule",
+    "documents",
+    "notes",
+    "personal",
+    "storage",
+    "will"
+  ],
+  "last_updated": "2026-04-07T21:30:06.749Z"
+}

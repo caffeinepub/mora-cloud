@@ -1,0 +1,152 @@
+// Version: 3.0.0
+type Beneficiary__528603104 =
+  {
+    createdAt : Time__900049286;
+    displayName : Text;
+    hashedPassword : Text;
+    id : Text;
+    username : Text
+  };
+type Capsule__674379747 =
+  {
+    beneficiaries : Map__605269027<Text, Beneficiary__528603104>;
+    docs : Map__605269027<Text, Document__636554508>;
+    globalInstructions : Text;
+    locked : Bool;
+    media : Map__605269027<Text, Media__686493839>;
+    neuronEntries : Map__605269027<Text, NeuronEntry__903569683>;
+    notes : Map__605269027<Text, Note__74666102>;
+    owner : Principal
+  };
+type Data__791452850<K, V> =
+  {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type DocumentType__72533914 = {#excel; #pdf; #powerpoint; #word};
+type Document__636554508 =
+  {
+    blobId : Text;
+    createdAt : Time__900049286;
+    documentType : DocumentType__72533914;
+    id : Text;
+    title : Text;
+    updatedAt : Time__900049286
+  };
+type Int__270357528 = Int__616954475;
+type Int__616954475 = Int;
+type Internal__8484328<K, V> =
+  {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
+type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type Map__158565046<K, V> = Map__297112838<K, V>;
+type Map__297112838<K, V> =
+  {var root : Node__46230540<K, V>; var size : Nat__490723111};
+type Map__605269027<K, V> = Map__158565046<K, V>;
+type MediaType__597750801 = {#photo; #video};
+type Media__686493839 =
+  {
+    blobId : Text;
+    createdAt : Time__900049286;
+    id : Text;
+    mediaType : MediaType__597750801;
+    title : Text
+  };
+type Nat__490723111 = Nat__920180692;
+type Nat__920180692 = Nat;
+type NeuronEntry__903569683 =
+  {
+    designatedController : Text;
+    dissolveDate : Text;
+    neuronId : Text;
+    notes : Text;
+    votingPreferences : Text
+  };
+type Node__46230540<K, V> =
+  {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type Note__74666102 =
+  {
+    body : Text;
+    createdAt : Time__900049286;
+    id : Text;
+    title : Text;
+    updatedAt : Time__900049286
+  };
+type OldBeneficiary__260178391 =
+  {
+    createdAt : Time__900049286;
+    displayName : Text;
+    hashedPassword : Text;
+    id : Text;
+    username : Text
+  };
+type OldCapsule__6815870 =
+  {
+    beneficiaries : Map__605269027<Text, OldBeneficiary__260178391>;
+    globalInstructions : Text;
+    locked : Bool;
+    media : Map__605269027<Text, OldMedia__936063719>;
+    neuronEntries : Map__605269027<Text, OldNeuronEntry__828063403>;
+    notes : Map__605269027<Text, OldNote__821963071>;
+    owner : Principal
+  };
+type OldMediaType__16242099 = {#photo; #video};
+type OldMedia__936063719 =
+  {
+    blobId : Text;
+    createdAt : Time__900049286;
+    id : Text;
+    mediaType : OldMediaType__16242099;
+    title : Text
+  };
+type OldNeuronEntry__828063403 =
+  {
+    designatedController : Text;
+    dissolveDate : Text;
+    neuronId : Text;
+    notes : Text;
+    votingPreferences : Text
+  };
+type OldNote__821963071 =
+  {
+    body : Text;
+    createdAt : Time__900049286;
+    id : Text;
+    title : Text;
+    updatedAt : Time__900049286
+  };
+type Time__796480547 = Int__270357528;
+type Time__900049286 = Time__796480547;
+type UserProfile__315128327 = {email : ?Text; name : Text};
+type UserProfile__491224006 = {email : ?Text; name : Text};
+type UserRole__1054455867 = {#admin; #guest; #user};
+actor ({
+  stable accessControlState :
+    {
+      var adminAssigned : Bool;
+      userRoles : Map__605269027<Principal, UserRole__1054455867>
+    };
+  in beneficiarySessions :
+    Map__605269027<Text, (Principal, Text, Time__900049286)>;
+  in capsules : Map__605269027<Principal, OldCapsule__6815870>;
+  in userProfiles : Map__605269027<Principal, UserProfile__315128327>;
+  in var visitCount : Nat
+}, {
+  stable accessControlState :
+    {
+      var adminAssigned : Bool;
+      userRoles : Map__605269027<Principal, UserRole__1054455867>
+    };
+  stable beneficiarySessions :
+    {
+      var root : Node__46230540<Text, (Principal, Text, Time__900049286)>;
+      var size : Nat__490723111
+    };
+  stable capsules :
+    {
+      var root : Node__46230540<Principal, Capsule__674379747>;
+      var size : Nat__490723111
+    };
+  stable userProfiles :
+    {
+      var root : Node__46230540<Principal, UserProfile__491224006>;
+      var size : Nat__490723111
+    };
+  stable var visitCount : Nat
+}) ;

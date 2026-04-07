@@ -1,0 +1,145 @@
+type _ImmutableObjectStorageRefillResult = 
+ record {
+   success: opt bool;
+   topped_up_amount: opt nat;
+ };
+type _ImmutableObjectStorageRefillInformation = record {
+                                                  proposed_top_up_amount:
+                                                   opt nat;};
+type _ImmutableObjectStorageCreateCertificateResult = 
+ record {
+   blob_hash: text;
+   method: text;
+ };
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type UserProfile = 
+ record {
+   email: opt text;
+   name: text;
+ };
+type Time = int;
+type Note = 
+ record {
+   body: text;
+   createdAt: Time;
+   id: text;
+   title: text;
+   updatedAt: Time;
+ };
+type NeuronEntry = 
+ record {
+   designatedController: text;
+   dissolveDate: text;
+   neuronId: text;
+   notes: text;
+   votingPreferences: text;
+ };
+type MediaType = 
+ variant {
+   photo;
+   video;
+ };
+type Media = 
+ record {
+   blobId: text;
+   createdAt: Time;
+   id: text;
+   mediaType: MediaType;
+   title: text;
+ };
+type DocumentType = 
+ variant {
+   excel;
+   pdf;
+   powerpoint;
+   word;
+ };
+type Document = 
+ record {
+   blobId: text;
+   createdAt: Time;
+   documentType: DocumentType;
+   id: text;
+   title: text;
+   updatedAt: Time;
+ };
+type Beneficiary = 
+ record {
+   createdAt: Time;
+   displayName: text;
+   hashedPassword: text;
+   id: text;
+   username: text;
+ };
+type AdminMetrics = 
+ record {
+   totalCapsules: nat;
+   totalMedia: nat;
+   totalNeuronEntries: nat;
+   totalNotes: nat;
+   totalUsers: nat;
+   visitCount: nat;
+ };
+service : {
+  _immutableObjectStorageBlobsAreLive: (hashes: vec blob) -> (vec bool) query;
+  _immutableObjectStorageBlobsToDelete: () -> (vec blob) query;
+  _immutableObjectStorageConfirmBlobDeletion: (blobs: vec blob) -> ();
+  _immutableObjectStorageCreateCertificate: (blobHash: text) ->
+   (_ImmutableObjectStorageCreateCertificateResult);
+  _immutableObjectStorageRefillCashier: (refillInformation:
+   opt _ImmutableObjectStorageRefillInformation) ->
+   (_ImmutableObjectStorageRefillResult);
+  _immutableObjectStorageUpdateGatewayPrincipals: () -> ();
+  _initializeAccessControl: () -> ();
+  addBeneficiary: (username: text, hashedPassword: text, displayName:
+   text) -> ();
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  beneficiaryLogin: (capsuleOwner: principal, username: text, password:
+   text) -> (text);
+  beneficiaryLogout: (token: text) -> ();
+  createCapsule: () -> ();
+  createDoc: (title: text, blobId: text, documentType: DocumentType) ->
+   (Document);
+  createMedia: (title: text, blobId: text, mediaType: MediaType) -> (text);
+  createNeuronEntry: (neuronId: text, dissolveDate: text,
+   designatedController: text, votingPreferences: text, notes: text) ->
+   (text);
+  createNote: (title: text, body: text) -> (text);
+  deleteCapsule: () -> ();
+  deleteDoc: (docId: text) -> ();
+  deleteMedia: (mediaId: text) -> ();
+  deleteNeuronEntry: (entryId: text) -> ();
+  deleteNote: (noteId: text) -> ();
+  getAdminMetrics: () -> (AdminMetrics) query;
+  getBeneficiaries: () -> (vec Beneficiary) query;
+  getCallerUserProfile: () -> (opt UserProfile) query;
+  getCallerUserRole: () -> (UserRole) query;
+  getCanisterId: () -> (principal) query;
+  getCapsuleDocs: () -> (vec Document) query;
+  getCapsuleLockStatus: (capsuleOwner: principal) -> (bool) query;
+  getCapsuleMedia: (capsuleOwner: principal) -> (vec Media) query;
+  getCapsuleNotes: (capsuleOwner: principal) -> (vec Note) query;
+  getCycleBalance: () -> (nat);
+  getGlobalInstructions: (capsuleOwner: principal) -> (text) query;
+  getNeuronEntries: (capsuleOwner: principal) -> (vec NeuronEntry) query;
+  getUserProfile: (user: principal) -> (opt UserProfile) query;
+  isAdminSetup: () -> (bool) query;
+  isCallerAdmin: () -> (bool) query;
+  isLoggedInToBeneficiarySession: (token: text) -> (bool) query;
+  recordVisit: () -> ();
+  removeBeneficiary: (username: text) -> ();
+  saveCallerUserProfile: (profile: UserProfile) -> ();
+  setGlobalInstructions: (instructions: text) -> ();
+  setupFirstAdmin: () -> ();
+  toggleCapsuleLock: () -> ();
+  updateDoc: (docId: text, title: text) -> (Document);
+  updateNeuronEntry: (entryId: text, neuronId: text, dissolveDate: text,
+   designatedController: text, votingPreferences: text, notes: text) -> ();
+  updateNote: (noteId: text, title: text, body: text) -> ();
+  validateBeneficiarySession: (token: text) -> (opt principal) query;
+}

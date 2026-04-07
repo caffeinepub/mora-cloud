@@ -1,0 +1,275 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Bricolage Grotesque (Display) ─────────────────────────────────────── */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("/assets/fonts/BricolageGrotesque.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Instrument Serif (Accent Display) ─────────────────────────────────── */
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/assets/fonts/InstrumentSerif-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/assets/fonts/InstrumentSerif-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ── Plus Jakarta Sans (Body) ───────────────────────────────────────────── */
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Sora (Logo / Futuristic Display) ──────────────────────────────────── */
+@font-face {
+  font-family: "Sora";
+  src: url("/assets/fonts/Sora.woff2") format("woff2");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* ── Cloud Capsule — Blue-Purple Sky Palette ──────────────────── */
+    /* Extracted from logo: sky blue → purple gradient, deep navy, white cloud */
+
+    /* Background: deep midnight blue-navy */
+    --background: 0.13 0.04 265;
+    /* Foreground: soft cloud white */
+    --foreground: 0.96 0.008 255;
+
+    /* Card: slightly lighter navy */
+    --card: 0.17 0.045 265;
+    --card-foreground: 0.96 0.008 255;
+
+    /* Popover */
+    --popover: 0.18 0.045 265;
+    --popover-foreground: 0.96 0.008 255;
+
+    /* Primary: sky blue (logo "Cloud" word color) */
+    --primary: 0.67 0.18 230;
+    --primary-foreground: 0.08 0.03 260;
+
+    /* Secondary: soft violet-purple (logo "Capsule" word color) */
+    --secondary: 0.58 0.22 285;
+    --secondary-foreground: 0.96 0.008 255;
+
+    /* Muted: deep blue-grey */
+    --muted: 0.22 0.04 265;
+    --muted-foreground: 0.68 0.04 255;
+
+    /* Accent: electric sky blue */
+    --accent: 0.72 0.16 220;
+    --accent-foreground: 0.08 0.03 260;
+
+    /* Destructive */
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 0.985 0 0;
+
+    /* Border: subtle blue */
+    --border: 0.26 0.05 265;
+    --input: 0.24 0.045 265;
+    --ring: 0.67 0.18 230;
+
+    /* Charts */
+    --chart-1: 0.67 0.18 230;
+    --chart-2: 0.58 0.22 285;
+    --chart-3: 0.72 0.16 220;
+    --chart-4: 0.55 0.2 260;
+    --chart-5: 0.78 0.12 215;
+
+    /* Sidebar */
+    --sidebar: 0.1 0.035 265;
+    --sidebar-foreground: 0.88 0.01 255;
+    --sidebar-primary: 0.67 0.18 230;
+    --sidebar-primary-foreground: 0.08 0.03 260;
+    --sidebar-accent: 0.2 0.04 265;
+    --sidebar-accent-foreground: 0.88 0.01 255;
+    --sidebar-border: 0.22 0.04 265;
+    --sidebar-ring: 0.67 0.18 230;
+
+    /* Sky blue accent specific */
+    --sky: 0.67 0.18 230;
+    --sky-muted: 0.55 0.12 230;
+    --violet: 0.58 0.22 285;
+    --cloud-shadow: 0 4px 24px oklch(0.58 0.2 260 / 0.28);
+    --cloud-shadow-lg: 0 12px 48px oklch(0.58 0.2 260 / 0.35);
+    --cloud-shadow-sm: 0 2px 10px oklch(0.58 0.2 260 / 0.18);
+  }
+
+  .dark {
+    --background: 0.1 0.035 265;
+    --foreground: 0.96 0.008 255;
+    --card: 0.15 0.04 265;
+    --card-foreground: 0.96 0.008 255;
+    --popover: 0.16 0.04 265;
+    --popover-foreground: 0.96 0.008 255;
+    --primary: 0.72 0.18 225;
+    --primary-foreground: 0.08 0.03 260;
+    --secondary: 0.62 0.22 285;
+    --secondary-foreground: 0.96 0.008 255;
+    --muted: 0.2 0.04 265;
+    --muted-foreground: 0.65 0.04 255;
+    --accent: 0.72 0.16 220;
+    --accent-foreground: 0.08 0.03 260;
+    --destructive: 0.704 0.191 22.216;
+    --destructive-foreground: 0.205 0 0;
+    --border: 0.24 0.045 265;
+    --input: 0.24 0.045 265;
+    --ring: 0.72 0.18 225;
+    --sidebar: 0.08 0.03 265;
+    --sidebar-foreground: 0.88 0.01 255;
+    --sidebar-primary: 0.72 0.18 225;
+    --sidebar-primary-foreground: 0.08 0.03 260;
+    --sidebar-accent: 0.18 0.04 265;
+    --sidebar-accent-foreground: 0.88 0.01 255;
+    --sidebar-border: 0.2 0.04 265;
+    --sidebar-ring: 0.72 0.18 225;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* ── Custom Utilities ──────────────────────────────────────────────────── */
+@layer utilities {
+  .font-display {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+  }
+  .font-serif {
+    font-family: "Instrument Serif", serif;
+  }
+  .font-body {
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  }
+  .font-logo {
+    font-family: "Sora", system-ui, sans-serif;
+  }
+
+  /* Logo text glow — radial backdrop + text-shadow in sky/violet */
+  .logo-text-glow {
+    text-shadow:
+      0 0 20px oklch(0.72 0.18 215 / 0.9),
+      0 0 40px oklch(0.67 0.18 230 / 0.6),
+      0 0 80px oklch(0.58 0.22 285 / 0.35);
+  }
+
+  /* Sky blue → violet gradient (matches logo text gradient) */
+  .text-gradient-sky {
+    background: linear-gradient(135deg, oklch(0.72 0.18 215), oklch(0.62 0.22 285));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Same gradient for backgrounds/borders */
+  .bg-gradient-sky {
+    background: linear-gradient(135deg, oklch(0.67 0.18 230), oklch(0.58 0.22 285));
+  }
+
+  .shadow-cloud {
+    box-shadow: var(--cloud-shadow);
+  }
+  .shadow-cloud-lg {
+    box-shadow: var(--cloud-shadow-lg);
+  }
+  .shadow-cloud-sm {
+    box-shadow: var(--cloud-shadow-sm);
+  }
+
+  /* Deep space background with subtle nebula glow */
+  .bg-space {
+    background:
+      radial-gradient(ellipse at 20% 10%, oklch(0.45 0.18 265 / 0.22), transparent 55%),
+      radial-gradient(ellipse at 80% 85%, oklch(0.42 0.2 290 / 0.18), transparent 50%),
+      radial-gradient(ellipse at 55% 40%, oklch(0.38 0.14 245 / 0.12), transparent 60%),
+      oklch(0.13 0.04 265);
+  }
+
+  .capsule-card {
+    background: oklch(var(--card));
+    border: 1px solid oklch(var(--border));
+    box-shadow: 0 2px 16px oklch(0.5 0.18 260 / 0.15), 0 1px 3px oklch(0.5 0.18 260 / 0.08);
+    border-radius: var(--radius);
+    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .capsule-card:hover {
+    box-shadow: 0 8px 32px oklch(0.5 0.18 260 / 0.28), 0 2px 8px oklch(0.5 0.18 260 / 0.12);
+    border-color: oklch(0.42 0.1 255);
+    transform: translateY(-2px);
+  }
+
+  .grain-overlay {
+    position: relative;
+  }
+  .grain-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+  }
+
+  .sidebar-dark {
+    background: oklch(var(--sidebar));
+    color: oklch(var(--sidebar-foreground));
+  }
+
+  /* Glowing border effect for hero CTA */
+  .glow-sky {
+    box-shadow: 0 0 20px oklch(0.67 0.18 230 / 0.4), 0 0 60px oklch(0.67 0.18 230 / 0.15);
+  }
+  .glow-violet {
+    box-shadow: 0 0 20px oklch(0.58 0.22 285 / 0.4), 0 0 60px oklch(0.58 0.22 285 / 0.15);
+  }
+}
+
+/* ── Scrollbar Styling ──────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.4 0.1 260 / 0.4);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.55 0.15 250 / 0.6);
+}
