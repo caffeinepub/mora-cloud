@@ -14,11 +14,12 @@ import MixinObjectStorage "mo:caffeineai-object-storage/Mixin";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import AccessControl "mo:caffeineai-authorization/access-control";
 
-
-
-
+import ShareLinkTypes "types/sharelinks";
+import ShareLinkLib "lib/sharelinks";
 
 actor {
+  type Result<T, E> = { #ok : T; #err : E };
+
   // Initialize the access control system
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -130,6 +131,8 @@ actor {
   let capsules = Map.empty<Principal, Capsule>();
   let beneficiarySessions = Map.empty<Text, (Principal, Text, Time.Time)>();
   let userProfiles = Map.empty<Principal, UserProfile>();
+  let shareLinks = Map.empty<Text, ShareLinkTypes.ShareLink>();
+  var shareLinkNonce : Nat = 0;
 
   // User Profile Management (required by instructions)
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
@@ -669,6 +672,78 @@ actor {
 
   public shared func beneficiaryLogout(token : Text) : async () {
     beneficiarySessions.remove(token);
+  };
+
+  // Share Link Management
+  public shared ({ caller }) func createShareLink(docId : Text, note : Text) : async Result<ShareLinkTypes.ShareLink, Text> {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      return #err("Unauthorized: Only authenticated users can create share links");
+    };
+    let capsule = getCapsuleByOwner(caller);
+    if (capsule.owner != caller) {
+      return #err("Unauthorized: Only the document owner can create share links");
+    };
+    if (not capsule.docs.containsKey(docId)) {
+      return #err("Document not found");
+    };
+    let token = ShareLinkLib.generateToken(Time.now(), shareLinkNonce);
+    shareLinkNonce += 1;
+    ShareLinkLib.createShareLink(shareLinks, token, docId, note);
+  };
+
+  public shared ({ caller }) func revokeShareLink(token : Text) : async Result<(), Text> {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      return #err("Unauthorized: Only authenticated users can revoke share links");
+    };
+    // Verify the share link belongs to a doc owned by caller
+    switch (shareLinks.get(token)) {
+      case (null) { return #err("not_found") };
+      case (?link) {
+        let capsule = getCapsuleByOwner(caller);
+        if (not capsule.docs.containsKey(link.docId)) {
+          return #err("Unauthorized: You do not own this share link");
+        };
+        ShareLinkLib.revokeShareLink(shareLinks, token);
+      };
+    };
+  };
+
+  public query ({ caller }) func getShareLinksForDoc(docId : Text) : async Result<[ShareLinkTypes.ShareLink], Text> {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      return #err("Unauthorized: Only authenticated users can list share links");
+    };
+    let capsule = getCapsuleByOwner(caller);
+    if (not capsule.docs.containsKey(docId)) {
+      return #err("Document not found");
+    };
+    #ok(ShareLinkLib.getShareLinksForDoc(shareLinks, docId));
+  };
+
+  public query func validateShareLink(token : Text) : async Result<ShareLinkTypes.ShareLinkAccess, Text> {
+    ShareLinkLib.validateShareLink(
+      shareLinks,
+      token,
+      func(docId) {
+        // Search all capsules for the doc with this id
+        var found : ?(Text, Text, Text) = null;
+        label search for ((_, capsule) in capsules.entries()) {
+          switch (capsule.docs.get(docId)) {
+            case (?doc) {
+              let dtText = switch (doc.documentType) {
+                case (#pdf) { "pdf" };
+                case (#word) { "word" };
+                case (#excel) { "excel" };
+                case (#powerpoint) { "powerpoint" };
+              };
+              found := ?(doc.blobId, doc.title, dtText);
+              break search;
+            };
+            case (null) {};
+          };
+        };
+        found;
+      },
+    );
   };
 
   // Cycle Balance Queries (admin only)

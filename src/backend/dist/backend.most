@@ -68,6 +68,15 @@ type Note__74666102 =
     title : Text;
     updatedAt : Time__900049286
   };
+type ShareLink__350863879 =
+  {
+    createdAt : Time__900049286;
+    docId : Text;
+    expiresAt : Time__900049286;
+    note : Text;
+    revoked : Bool;
+    token : Text
+  };
 type Time__796480547 = Int__270357528;
 type Time__900049286 = Time__796480547;
 type UserProfile__491224006 = {email : ?Text; name : Text};
@@ -86,6 +95,12 @@ actor {
   stable capsules :
     {
       var root : Node__46230540<Principal, Capsule__674379747>;
+      var size : Nat__490723111
+    };
+  stable var shareLinkNonce : Nat;
+  stable shareLinks :
+    {
+      var root : Node__46230540<Text, ShareLink__350863879>;
       var size : Nat__490723111
     };
   stable userProfiles :

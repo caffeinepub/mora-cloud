@@ -28,7 +28,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  Check,
   Download,
   Eye,
   FileSpreadsheet,
@@ -55,6 +54,7 @@ import {
   useUpdateDoc,
 } from "../../hooks/useQueries";
 import { formatTime } from "../../utils/crypto";
+import { ShareLinksPanel } from "./ShareLinksPanel";
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -211,11 +211,13 @@ function DocRow({
   idx,
   onDelete,
   onRename,
+  onShare,
 }: {
   doc: Document;
   idx: number;
   onDelete: () => void;
   onRename: (title: string) => Promise<void>;
+  onShare: () => void;
 }) {
   const { getBlobUrl } = useBlobUpload();
   const [renameOpen, setRenameOpen] = useState(false);
@@ -228,9 +230,6 @@ function DocRow({
 
   // Download state
   const [downloading, setDownloading] = useState(false);
-
-  // Share/copy state
-  const [copied, setCopied] = useState(false);
 
   const config = DOC_TYPE_CONFIG[doc.documentType];
   const DocIcon = config.icon;
@@ -280,19 +279,6 @@ function DocRow({
       setDownloading(false);
     }
   }, [getBlobUrl, doc.blobId, doc.documentType, doc.title]);
-
-  // SHARE: copy CDN URL to clipboard
-  const handleShare = useCallback(async () => {
-    try {
-      const url = await getBlobUrl(doc.blobId);
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      toast.success("Link copied to clipboard!");
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("Could not copy link. Please try again.");
-    }
-  }, [getBlobUrl, doc.blobId]);
 
   const handleRenameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -404,19 +390,15 @@ function DocRow({
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8"
-                  onClick={handleShare}
-                  aria-label={`Copy link for ${doc.title}`}
+                  onClick={onShare}
+                  aria-label={`Manage share links for ${doc.title}`}
                   data-ocid={`docs.share_button.${idx + 1}`}
                 >
-                  {copied ? (
-                    <Check className="w-3.5 h-3.5 text-green-500" />
-                  ) : (
-                    <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
-                  )}
+                  <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">
-                {copied ? "Copied!" : "Copy link"}
+                Share
               </TooltipContent>
             </Tooltip>
 
@@ -558,6 +540,7 @@ export default function DocsTab() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
+  const [shareDoc, setShareDoc] = useState<Document | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -693,6 +676,7 @@ export default function DocsTab() {
               idx={idx}
               onDelete={() => handleDelete(doc.id)}
               onRename={(newTitle) => handleRename(doc.id, newTitle)}
+              onShare={() => setShareDoc(doc)}
             />
           ))}
         </motion.div>
@@ -832,6 +816,18 @@ export default function DocsTab() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Share Links Panel */}
+      {shareDoc && (
+        <ShareLinksPanel
+          open={!!shareDoc}
+          onOpenChange={(open) => {
+            if (!open) setShareDoc(null);
+          }}
+          docId={shareDoc.id}
+          docTitle={shareDoc.title}
+        />
+      )}
     </div>
   );
 }

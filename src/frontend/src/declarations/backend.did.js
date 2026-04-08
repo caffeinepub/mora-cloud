@@ -43,6 +43,15 @@ export const MediaType = IDL.Variant({
   'video' : IDL.Null,
   'photo' : IDL.Null,
 });
+export const ShareLink = IDL.Record({
+  'token' : IDL.Text,
+  'expiresAt' : Time,
+  'revoked' : IDL.Bool,
+  'note' : IDL.Text,
+  'createdAt' : Time,
+  'docId' : IDL.Text,
+});
+export const Result_3 = IDL.Variant({ 'ok' : ShareLink, 'err' : IDL.Text });
 export const AdminMetrics = IDL.Record({
   'totalMedia' : IDL.Nat,
   'visitCount' : IDL.Nat,
@@ -83,6 +92,18 @@ export const NeuronEntry = IDL.Record({
   'designatedController' : IDL.Text,
   'votingPreferences' : IDL.Text,
 });
+export const Result_2 = IDL.Variant({
+  'ok' : IDL.Vec(ShareLink),
+  'err' : IDL.Text,
+});
+export const Result_1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+export const ShareLinkAccess = IDL.Record({
+  'title' : IDL.Text,
+  'documentType' : IDL.Text,
+  'blobId' : IDL.Text,
+  'docId' : IDL.Text,
+});
+export const Result = IDL.Variant({ 'ok' : ShareLinkAccess, 'err' : IDL.Text });
 
 export const idlService = IDL.Service({
   '_immutableObjectStorageBlobsAreLive' : IDL.Func(
@@ -129,6 +150,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'createNote' : IDL.Func([IDL.Text, IDL.Text], [IDL.Text], []),
+  'createShareLink' : IDL.Func([IDL.Text, IDL.Text], [Result_3], []),
   'deleteCapsule' : IDL.Func([], [], []),
   'deleteDoc' : IDL.Func([IDL.Text], [], []),
   'deleteMedia' : IDL.Func([IDL.Text], [], []),
@@ -150,6 +172,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(NeuronEntry)],
       ['query'],
     ),
+  'getShareLinksForDoc' : IDL.Func([IDL.Text], [Result_2], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -164,6 +187,7 @@ export const idlService = IDL.Service({
     ),
   'recordVisit' : IDL.Func([], [], []),
   'removeBeneficiary' : IDL.Func([IDL.Text], [], []),
+  'revokeShareLink' : IDL.Func([IDL.Text], [Result_1], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setGlobalInstructions' : IDL.Func([IDL.Text], [], []),
   'setupFirstAdmin' : IDL.Func([], [], []),
@@ -180,6 +204,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(IDL.Principal)],
       ['query'],
     ),
+  'validateShareLink' : IDL.Func([IDL.Text], [Result], ['query']),
 });
 
 export const idlInitArgs = [];
@@ -217,6 +242,15 @@ export const idlFactory = ({ IDL }) => {
     'blobId' : IDL.Text,
   });
   const MediaType = IDL.Variant({ 'video' : IDL.Null, 'photo' : IDL.Null });
+  const ShareLink = IDL.Record({
+    'token' : IDL.Text,
+    'expiresAt' : Time,
+    'revoked' : IDL.Bool,
+    'note' : IDL.Text,
+    'createdAt' : Time,
+    'docId' : IDL.Text,
+  });
+  const Result_3 = IDL.Variant({ 'ok' : ShareLink, 'err' : IDL.Text });
   const AdminMetrics = IDL.Record({
     'totalMedia' : IDL.Nat,
     'visitCount' : IDL.Nat,
@@ -257,6 +291,15 @@ export const idlFactory = ({ IDL }) => {
     'designatedController' : IDL.Text,
     'votingPreferences' : IDL.Text,
   });
+  const Result_2 = IDL.Variant({ 'ok' : IDL.Vec(ShareLink), 'err' : IDL.Text });
+  const Result_1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+  const ShareLinkAccess = IDL.Record({
+    'title' : IDL.Text,
+    'documentType' : IDL.Text,
+    'blobId' : IDL.Text,
+    'docId' : IDL.Text,
+  });
+  const Result = IDL.Variant({ 'ok' : ShareLinkAccess, 'err' : IDL.Text });
   
   return IDL.Service({
     '_immutableObjectStorageBlobsAreLive' : IDL.Func(
@@ -303,6 +346,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'createNote' : IDL.Func([IDL.Text, IDL.Text], [IDL.Text], []),
+    'createShareLink' : IDL.Func([IDL.Text, IDL.Text], [Result_3], []),
     'deleteCapsule' : IDL.Func([], [], []),
     'deleteDoc' : IDL.Func([IDL.Text], [], []),
     'deleteMedia' : IDL.Func([IDL.Text], [], []),
@@ -324,6 +368,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(NeuronEntry)],
         ['query'],
       ),
+    'getShareLinksForDoc' : IDL.Func([IDL.Text], [Result_2], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -338,6 +383,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'recordVisit' : IDL.Func([], [], []),
     'removeBeneficiary' : IDL.Func([IDL.Text], [], []),
+    'revokeShareLink' : IDL.Func([IDL.Text], [Result_1], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setGlobalInstructions' : IDL.Func([IDL.Text], [], []),
     'setupFirstAdmin' : IDL.Func([], [], []),
@@ -354,6 +400,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(IDL.Principal)],
         ['query'],
       ),
+    'validateShareLink' : IDL.Func([IDL.Text], [Result], ['query']),
   });
 };
 

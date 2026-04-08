@@ -4,6 +4,7 @@ import BeneficiaryCapsulePage from "../pages/BeneficiaryCapsulePage";
 import BeneficiaryLoginPage from "../pages/BeneficiaryLoginPage";
 import DashboardPage from "../pages/DashboardPage";
 import LandingPage from "../pages/LandingPage";
+import SharedDocPage from "../pages/SharedDocPage";
 import RootLayout from "./RootLayout";
 
 const rootRoute = createRootRoute({
@@ -46,6 +47,12 @@ const adminRoute = createRoute({
   component: AdminPage,
 });
 
+const shareRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/share/$token",
+  component: SharedDocPage,
+});
+
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   dashboardRoute,
@@ -53,4 +60,5 @@ export const routeTree = rootRoute.addChildren([
   accessRoute,
   capsuleRoute,
   adminRoute,
+  shareRoute,
 ]);

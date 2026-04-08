@@ -60,6 +60,28 @@ export interface Note {
   'createdAt' : Time,
   'updatedAt' : Time,
 }
+export type Result = { 'ok' : ShareLinkAccess } |
+  { 'err' : string };
+export type Result_1 = { 'ok' : null } |
+  { 'err' : string };
+export type Result_2 = { 'ok' : Array<ShareLink> } |
+  { 'err' : string };
+export type Result_3 = { 'ok' : ShareLink } |
+  { 'err' : string };
+export interface ShareLink {
+  'token' : string,
+  'expiresAt' : Time,
+  'revoked' : boolean,
+  'note' : string,
+  'createdAt' : Time,
+  'docId' : string,
+}
+export interface ShareLinkAccess {
+  'title' : string,
+  'documentType' : string,
+  'blobId' : string,
+  'docId' : string,
+}
 export type Time = bigint;
 export interface UserProfile { 'name' : string, 'email' : [] | [string] }
 export type UserRole = { 'admin' : null } |
@@ -108,6 +130,7 @@ export interface _SERVICE {
     string
   >,
   'createNote' : ActorMethod<[string, string], string>,
+  'createShareLink' : ActorMethod<[string, string], Result_3>,
   'deleteCapsule' : ActorMethod<[], undefined>,
   'deleteDoc' : ActorMethod<[string], undefined>,
   'deleteMedia' : ActorMethod<[string], undefined>,
@@ -125,12 +148,14 @@ export interface _SERVICE {
   'getCycleBalance' : ActorMethod<[], bigint>,
   'getGlobalInstructions' : ActorMethod<[Principal], string>,
   'getNeuronEntries' : ActorMethod<[Principal], Array<NeuronEntry>>,
+  'getShareLinksForDoc' : ActorMethod<[string], Result_2>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isAdminSetup' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isLoggedInToBeneficiarySession' : ActorMethod<[string], boolean>,
   'recordVisit' : ActorMethod<[], undefined>,
   'removeBeneficiary' : ActorMethod<[string], undefined>,
+  'revokeShareLink' : ActorMethod<[string], Result_1>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setGlobalInstructions' : ActorMethod<[string], undefined>,
   'setupFirstAdmin' : ActorMethod<[], undefined>,
@@ -142,6 +167,7 @@ export interface _SERVICE {
   >,
   'updateNote' : ActorMethod<[string, string, string], undefined>,
   'validateBeneficiarySession' : ActorMethod<[string], [] | [Principal]>,
+  'validateShareLink' : ActorMethod<[string], Result>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

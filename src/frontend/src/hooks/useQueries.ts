@@ -9,7 +9,21 @@ import type {
   UserProfile,
 } from "../backend.d";
 import { DocumentType } from "../backend.d";
+import type { ShareLink } from "../types/shareLink";
 import { useActor } from "./useActor";
+
+// ── Actor with share link extensions ─────────────────────────────────────
+
+interface ShareLinkActor {
+  createShareLink(
+    docId: string,
+    note: string,
+  ): Promise<{ ok: ShareLink } | { err: string }>;
+  revokeShareLink(token: string): Promise<{ ok: null } | { err: string }>;
+  getShareLinksForDoc(
+    docId: string,
+  ): Promise<{ ok: ShareLink[] } | { err: string }>;
+}
 
 // ── User Profile ──────────────────────────────────────────────────────────
 
@@ -560,6 +574,69 @@ export function useDeleteDoc() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["capsuleDocs"] });
+    },
+  });
+}
+
+// ── Share Links ───────────────────────────────────────────────────────────
+
+function asShareActor(actor: unknown): ShareLinkActor {
+  return actor as ShareLinkActor;
+}
+
+export function useGetShareLinksForDoc(docId: string | null) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<ShareLink[]>({
+    queryKey: ["shareLinks", docId],
+    queryFn: async () => {
+      if (!actor || !docId) throw new Error("Actor or docId not available");
+      const result = await asShareActor(actor).getShareLinksForDoc(docId);
+      if ("err" in result) throw new Error(result.err);
+      return result.ok;
+    },
+    enabled: !!actor && !isFetching && !!docId,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useCreateShareLink() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      docId,
+      note,
+    }: {
+      docId: string;
+      note: string;
+    }): Promise<ShareLink> => {
+      if (!actor) throw new Error("Actor not available");
+      const result = await asShareActor(actor).createShareLink(docId, note);
+      if ("err" in result) throw new Error(result.err);
+      return result.ok;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["shareLinks", variables.docId],
+      });
+    },
+  });
+}
+
+export function useRevokeShareLink() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (token: string) => {
+      if (!actor) throw new Error("Actor not available");
+      const result = await asShareActor(actor).revokeShareLink(token);
+      if ("err" in result) throw new Error(result.err);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shareLinks"] });
     },
   });
 }

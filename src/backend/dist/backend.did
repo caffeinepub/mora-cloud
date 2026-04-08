@@ -23,6 +23,42 @@ type UserProfile =
    name: text;
  };
 type Time = int;
+type ShareLinkAccess = 
+ record {
+   blobId: text;
+   docId: text;
+   documentType: text;
+   title: text;
+ };
+type ShareLink = 
+ record {
+   createdAt: Time;
+   docId: text;
+   expiresAt: Time;
+   note: text;
+   revoked: bool;
+   token: text;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: ShareLink;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: vec ShareLink;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: ShareLinkAccess;
+ };
 type Note = 
  record {
    body: text;
@@ -110,6 +146,7 @@ service : {
    designatedController: text, votingPreferences: text, notes: text) ->
    (text);
   createNote: (title: text, body: text) -> (text);
+  createShareLink: (docId: text, note: text) -> (Result_3);
   deleteCapsule: () -> ();
   deleteDoc: (docId: text) -> ();
   deleteMedia: (mediaId: text) -> ();
@@ -127,12 +164,14 @@ service : {
   getCycleBalance: () -> (nat);
   getGlobalInstructions: (capsuleOwner: principal) -> (text) query;
   getNeuronEntries: (capsuleOwner: principal) -> (vec NeuronEntry) query;
+  getShareLinksForDoc: (docId: text) -> (Result_2) query;
   getUserProfile: (user: principal) -> (opt UserProfile) query;
   isAdminSetup: () -> (bool) query;
   isCallerAdmin: () -> (bool) query;
   isLoggedInToBeneficiarySession: (token: text) -> (bool) query;
   recordVisit: () -> ();
   removeBeneficiary: (username: text) -> ();
+  revokeShareLink: (token: text) -> (Result_1);
   saveCallerUserProfile: (profile: UserProfile) -> ();
   setGlobalInstructions: (instructions: text) -> ();
   setupFirstAdmin: () -> ();
@@ -142,4 +181,5 @@ service : {
    designatedController: text, votingPreferences: text, notes: text) -> ();
   updateNote: (noteId: text, title: text, body: text) -> ();
   validateBeneficiarySession: (token: text) -> (opt principal) query;
+  validateShareLink: (token: text) -> (Result) query;
 }
